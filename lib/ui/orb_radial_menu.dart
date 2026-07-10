@@ -49,7 +49,7 @@ class OrbRadialMenu extends StatelessWidget {
   final void Function(int sector)? onTapIcon;
 
   /// Radius of the icon ring, in logical pixels.
-  double get _radius => 82.0;
+  double get _radius => 76.0;
 
   @override
   Widget build(BuildContext context) {
@@ -58,14 +58,19 @@ class OrbRadialMenu extends StatelessWidget {
         final targetAngle = _targetAngle(i);
         final isHighlighted = i == highlightedSector;
 
+        // Stagger each item: items fan out in sequence with a 0.05s offset
+        final staggerDelay = i * 0.08;
+        final effectiveProgress = ((bloomProgress - staggerDelay) / (1.0 - staggerDelay))
+            .clamp(0.0, 1.0);
+        final easedProgress = Curves.easeOutCubic.transform(effectiveProgress);
+
         // Rotation animation: all icons start from 180° (straight left) and sweep outward
         final startAngle = pi; // 180° — straight left
         final angleDelta = targetAngle - startAngle;
-        // Normalize to shortest path
         final shortest = _shortestAngleDelta(angleDelta);
-        final currentAngle = pi + shortest * _easeOutBack(bloomProgress);
+        final currentAngle = pi + shortest * easedProgress;
 
-        final distance = _radius * bloomProgress;
+        final distance = _radius * easedProgress;
         final dx = cos(currentAngle) * distance;
         final dy = sin(currentAngle) * distance;
 
@@ -104,13 +109,6 @@ class OrbRadialMenu extends StatelessWidget {
     return d;
   }
 
-  /// Custom easing: slow start, overshoot, settle — for the "sweep" feel.
-  static double _easeOutBack(double t) {
-    const c1 = 1.2;
-    final t1 = t - 1;
-    return t1 * t1 * ((c1 + 1) * t1 + c1) + 1;
-  }
-
   /// Detect which sector [localOffset] (relative to [center]) falls into.
   /// Only the LEFT half-circle (away from screen edge) is active.
   /// Returns -1 in dead zone, 0-3 for a valid sector.
@@ -119,7 +117,7 @@ class OrbRadialMenu extends StatelessWidget {
     final distance = delta.distance;
 
     if (distance < 24) return -1;
-    if (distance > 115) return -1;
+    if (distance > 106) return -1;
 
     final angle = atan2(delta.dy, delta.dx);
     final deg = angle * 180 / pi; // -180..180
@@ -172,13 +170,13 @@ class _RadialIcon extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isHighlighted
-                    ? item.color.withValues(alpha: 0.22)
-                    : Colors.white.withValues(alpha: 0.06),
+                    ? item.color.withValues(alpha: 0.32)
+                    : Colors.white.withValues(alpha: 0.14),
                 border: Border.all(
                   color: isHighlighted
-                      ? item.color.withValues(alpha: 0.55)
-                      : Colors.white.withValues(alpha: 0.1),
-                  width: isHighlighted ? 1.5 : 0.8,
+                      ? item.color.withValues(alpha: 0.65)
+                      : Colors.white.withValues(alpha: 0.22),
+                  width: isHighlighted ? 1.5 : 1.2,
                 ),
                 boxShadow: isHighlighted
                     ? [
@@ -193,7 +191,7 @@ class _RadialIcon extends StatelessWidget {
                 item.icon,
                 color: isHighlighted
                     ? item.color
-                    : AppTheme.orbTextOnGlass.withValues(alpha: 0.7),
+                    : AppTheme.orbTextOnGlass.withValues(alpha: 0.88),
                 size: size * 0.55,
               ),
             ),
@@ -204,7 +202,7 @@ class _RadialIcon extends StatelessWidget {
                 fontSize: 10,
                 color: isHighlighted
                     ? item.color
-                    : AppTheme.orbTextOnGlass.withValues(alpha: 0.45),
+                    : AppTheme.orbTextOnGlass.withValues(alpha: 0.70),
                 fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.normal,
               ),
             ),

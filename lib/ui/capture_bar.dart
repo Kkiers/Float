@@ -12,16 +12,19 @@ import '../theme/app_theme.dart';
 
 /// Signature for capture bar callbacks.
 typedef CaptureCallback = void Function();
+/// Signature for user activity notifications — resets the auto-dismiss safety timer.
+typedef ActivityCallback = void Function();
 
 // ---------------------------------------------------------------------------
 // Text capture bar
 // ---------------------------------------------------------------------------
 
 class TextCaptureBar extends StatefulWidget {
-  const TextCaptureBar({super.key, required this.onDone, required this.onCancel});
+  const TextCaptureBar({super.key, required this.onDone, required this.onCancel, this.onUserActivity});
 
   final CaptureCallback onDone;
   final CaptureCallback onCancel;
+  final ActivityCallback? onUserActivity;
 
   @override
   State<TextCaptureBar> createState() => _TextCaptureBarState();
@@ -132,6 +135,7 @@ class _TextCaptureBarState extends State<TextCaptureBar> {
                   style: const TextStyle(color: AppTheme.orbTextOnGlass, fontSize: 14),
                   maxLines: 3, minLines: 1,
                   textInputAction: TextInputAction.done,
+                  onChanged: (_) => widget.onUserActivity?.call(),
                   onSubmitted: (_) => _save(),
                   decoration: InputDecoration(
                     hintText: '想到什么？',
@@ -253,9 +257,10 @@ class _ClipboardCaptureBarState extends State<ClipboardCaptureBar> {
 // ---------------------------------------------------------------------------
 
 class VoiceCaptureBar extends StatefulWidget {
-  const VoiceCaptureBar({super.key, required this.onDone, this.onCancel});
+  const VoiceCaptureBar({super.key, required this.onDone, this.onCancel, this.onUserActivity});
   final CaptureCallback onDone;
   final CaptureCallback? onCancel;
+  final ActivityCallback? onUserActivity;
 
   @override
   State<VoiceCaptureBar> createState() => _VoiceCaptureBarState();
@@ -285,7 +290,7 @@ class _VoiceCaptureBarState extends State<VoiceCaptureBar> {
       _filePath = await _recorder.start();
       if (mounted) setState(() => _recording = true);
       _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (mounted) setState(() => _seconds++);
+        if (mounted) { setState(() => _seconds++); widget.onUserActivity?.call(); }
       });
     } catch (e) {
       AnalyticsService.instance.error(_tag, 'Record failed', properties: {'error': e.toString()});

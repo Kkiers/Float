@@ -59,7 +59,7 @@ class _FloatOverlayState extends State<FloatOverlay> with TickerProviderStateMix
 
     _bloomCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
     )..addListener(() => setState(() {}))
       ..addStatusListener(_onBloomStatus);
 
@@ -95,7 +95,8 @@ class _FloatOverlayState extends State<FloatOverlay> with TickerProviderStateMix
   void _updateOrbCenter() {
     final size = MediaQuery.of(context).size;
     if (size.width > 0 && size.height > 0) {
-      _orbCenter = Offset(size.width / 2, size.height / 2);
+      // Position orb near right edge, vertically centered
+      _orbCenter = Offset(size.width - 16, size.height / 2);
     }
   }
 
@@ -226,14 +227,8 @@ class _FloatOverlayState extends State<FloatOverlay> with TickerProviderStateMix
     setState(() => _state = _OrbState.capture);
     _menuTimer?.cancel();
 
-    // Safety: auto-dismiss after 30s if user gets stuck
-    _captureSafetyTimer?.cancel();
-    _captureSafetyTimer = Timer(const Duration(seconds: 30), () {
-      if (_state == _OrbState.capture && mounted) {
-        AnalyticsService.instance.warning(_tag, 'Capture safety timeout triggered');
-        _dismiss();
-      }
-    });
+    // Safety: auto-dismiss after 120s if user gets truly stuck
+    _resetCaptureSafetyTimer();
 
     if (_captureMode == 0) {
       OverlayManager.setOrbVoiceMode().catchError((e) {
@@ -247,6 +242,20 @@ class _FloatOverlayState extends State<FloatOverlay> with TickerProviderStateMix
       });
     }
   }
+
+  /// Reset the capture safety timer — called on every user activity.
+  void _onUserActivity() {
+    _captureSafetyTimer?.cancel();
+    _captureSafetyTimer = Timer(const Duration(seconds: 120), () {
+      if (_state == _OrbState.capture && mounted) {
+        AnalyticsService.instance.warning(_tag, 'Capture safety timeout triggered');
+        _dismiss();
+      }
+    });
+  }
+
+  /// Start or reset the capture safety timer.
+  void _resetCaptureSafetyTimer() => _onUserActivity();
 
   void _dismiss() {
     if (_state == _OrbState.dismissing || _state == _OrbState.idle) return;
@@ -351,8 +360,8 @@ class _FloatOverlayState extends State<FloatOverlay> with TickerProviderStateMix
     final bloomGlow = _bloomCtrl.value;
     final glowAlpha = (idleAlpha + bloomGlow * 0.5).clamp(0.0, 1.0);
     final pulse = _glowPulseCtrl.value;
-    final orbSize = 16.0 + bloomGlow * 4.0;
-    final glowRadius = 10.0 + bloomGlow * 14.0 + pulse * 3.0;
+    final orbSize = 12.0 + bloomGlow * 4.0;
+    final glowRadius = 8.0 + bloomGlow * 14.0 + pulse * 3.0;
 
     return Positioned(
       left: _orbCenter.dx - orbSize / 2,
@@ -388,14 +397,16 @@ class _FloatOverlayState extends State<FloatOverlay> with TickerProviderStateMix
     switch (_captureMode) {
       case 1:
         bar = TextCaptureBar(
-            onDone: _onCaptureDone, onCancel: _onCaptureDone);
+            onDone: _onCaptureDone, onCancel: _onCaptureDone,
+            onUserActivity: _onUserActivity);
         break;
       case 2:
         bar = ClipboardCaptureBar(onDone: _onCaptureDone);
         break;
       case 0:
         bar = VoiceCaptureBar(
-            onDone: _onCaptureDone, onCancel: _onCaptureDone);
+            onDone: _onCaptureDone, onCancel: _onCaptureDone,
+            onUserActivity: _onUserActivity);
         break;
       case 3:
         bar = ScreenshotCaptureBar(onDone: _onCaptureDone);

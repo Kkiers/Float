@@ -43,12 +43,12 @@ public final class GeneratedPluginRegistrant {
     try {
       flutterEngine.getPlugins().add(new com.floating.capture.AudioRecorderPlugin());
     } catch (Exception e) {
-      Log.e(TAG, "Error registering plugin audio_recorder", e);
+      Log.e(TAG, "Error registering plugin audio_recorder, com.floating.capture.AudioRecorderPlugin", e);
     }
     try {
       flutterEngine.getPlugins().add(new com.floating.capture.WhisperPlugin());
     } catch (Exception e) {
-      Log.e(TAG, "Error registering plugin whisper", e);
+      Log.e(TAG, "Error registering plugin whisper, com.floating.capture.WhisperPlugin", e);
     }
   }
 }

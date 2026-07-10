@@ -8,11 +8,11 @@ class OverlayManager {
 
   static const _tag = 'OverlayManager';
 
-  /// Orb idle window size (16dp orb + large touch padding for easy drag)
-  static const idleWindowSize = 72;
+  /// Orb idle window size (12dp orb + touch padding for easy drag)
+  static const idleWindowSize = 54;
 
-  /// Radial menu window size (100dp radius × 2 + 30dp icons + 30dp margin)
-  static const menuWindowSize = 260;
+  /// Radial menu window size (76dp radius × 2 + 30dp icons + 30dp margin)
+  static const menuWindowSize = 240;
 
   // ---------------------------------------------------------------------------
   // Permission

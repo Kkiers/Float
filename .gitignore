@@ -42,3 +42,4 @@ build_jni2/
 captures.db
 android/.gradle/
 android/local.properties
+nul
