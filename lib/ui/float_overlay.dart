@@ -95,8 +95,8 @@ class _FloatOverlayState extends State<FloatOverlay> with TickerProviderStateMix
   void _updateOrbCenter() {
     final size = MediaQuery.of(context).size;
     if (size.width > 0 && size.height > 0) {
-      // Position orb near right edge, vertically centered
-      _orbCenter = Offset(size.width - 16, size.height / 2);
+      // Position orb right at the screen edge, vertically centered
+      _orbCenter = Offset(size.width - 8, size.height / 2);
     }
   }
 
@@ -360,8 +360,8 @@ class _FloatOverlayState extends State<FloatOverlay> with TickerProviderStateMix
     final bloomGlow = _bloomCtrl.value;
     final glowAlpha = (idleAlpha + bloomGlow * 0.5).clamp(0.0, 1.0);
     final pulse = _glowPulseCtrl.value;
-    final orbSize = 12.0 + bloomGlow * 4.0;
-    final glowRadius = 8.0 + bloomGlow * 14.0 + pulse * 3.0;
+    final orbSize = 10.0 + bloomGlow * 4.0;
+    final glowRadius = 6.0 + bloomGlow * 14.0 + pulse * 3.0;
 
     return Positioned(
       left: _orbCenter.dx - orbSize / 2,

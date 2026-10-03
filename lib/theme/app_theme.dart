@@ -10,6 +10,16 @@ class AppTheme {
   static const orbTextOnGlass = Color(0xFFF2F2F7);
   static const orbIconHighlight = Color(0xFFFFD580);
 
+  // 月经周期模块色板（中性、无粉红小花、高对比）
+  static const cycleBackground = Color(0xFFFDFBF9); // 暖白底
+  static const cycleRose = Color(0xFFFF5A7D); // 已记录经期
+  static const cycleRoseOutline = Color(0x66FF5A7D); // 预测空心（40%）
+  static const cycleRoseFill = Color(0x1AFF5A7D); // 预测软填充（10%）
+  static const cycleAccent = Color(0xFF5C80E5); // 今日/强调
+  static const cycleTextNavy = Color(0xFF20132E); // 主文字
+  static const cycleSymptom = Color(0xFF9C6ADE); // 时间线症状紫点
+  static const cycleSymptomGray = Color(0xFFB0AAB8); // 日历症状灰点
+
   static ThemeData light() {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: _seed,

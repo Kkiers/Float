@@ -43,7 +43,7 @@ class WhisperPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "loadModel" -> {
-                val path = call.argument<String>("path") ?: getDefaultModelPath()
+                val path = resolveModelPath(call.argument<String>("path"))
                 try {
                     WhisperEngine.load()
                     val ok = WhisperEngine.nativeInit(path)
@@ -83,9 +83,14 @@ class WhisperPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         }
     }
 
+    /** 若指定路径不存在则回退到默认路径（首次启动会从 assets 拷贝模型）。 */
+    private fun resolveModelPath(requested: String?): String {
+        if (requested != null && File(requested).exists()) return requested
+        return getDefaultModelPath()
+    }
+
     /** Get or create the default model path. Copies from assets on first launch if needed. */
-    private fun getDefaultModelPath(): String {
-        val dir = File(appContext?.filesDir, "models")
+    private fun getDefaultModelPath(): String {        val dir = File(appContext?.filesDir, "models")
         dir.mkdirs()
         val modelFile = File(dir, "ggml-tiny.bin")
 

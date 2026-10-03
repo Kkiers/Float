@@ -36,19 +36,14 @@ public final class GeneratedPluginRegistrant {
       Log.e(TAG, "Error registering plugin permission_handler_android, com.baseflow.permissionhandler.PermissionHandlerPlugin", e);
     }
     try {
+      flutterEngine.getPlugins().add(new io.flutter.plugins.sharedpreferences.SharedPreferencesPlugin());
+    } catch (Exception e) {
+      Log.e(TAG, "Error registering plugin shared_preferences_android, io.flutter.plugins.sharedpreferences.SharedPreferencesPlugin", e);
+    }
+    try {
       flutterEngine.getPlugins().add(new com.tekartik.sqflite.SqflitePlugin());
     } catch (Exception e) {
       Log.e(TAG, "Error registering plugin sqflite_android, com.tekartik.sqflite.SqflitePlugin", e);
-    }
-    try {
-      flutterEngine.getPlugins().add(new com.floating.capture.AudioRecorderPlugin());
-    } catch (Exception e) {
-      Log.e(TAG, "Error registering plugin audio_recorder, com.floating.capture.AudioRecorderPlugin", e);
-    }
-    try {
-      flutterEngine.getPlugins().add(new com.floating.capture.WhisperPlugin());
-    } catch (Exception e) {
-      Log.e(TAG, "Error registering plugin whisper, com.floating.capture.WhisperPlugin", e);
     }
   }
 }

@@ -43,3 +43,6 @@ captures.db
 android/.gradle/
 android/local.properties
 nul
+
+# IDE / local junk
+.vscode/

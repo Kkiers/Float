@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../models/capture_append.dart';
 import '../models/capture_item.dart';
 import 'analytics_service.dart';
 
@@ -37,7 +38,7 @@ class CaptureStorage {
 
     return openDatabase(
       path,
-      version: 1,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE captures (
@@ -48,8 +49,45 @@ class CaptureStorage {
             captured_at INTEGER NOT NULL
           )
         ''');
+        await _createChatTables(db);
+        await _createAppendsTable(db);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) await _createChatTables(db);
+        if (oldVersion < 3) await _createAppendsTable(db);
       },
     );
+  }
+
+  Future<void> _createAppendsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE capture_appends (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        capture_id INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+  }
+
+  Future<void> _createChatTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE chat_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        capture_id INTEGER NOT NULL,
+        persona_id TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE chat_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id INTEGER NOT NULL,
+        role TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    ''');
   }
 
   Future<int> insert(CaptureItem item) async {
@@ -73,8 +111,64 @@ class CaptureStorage {
     return rows.map(CaptureItem.fromMap).toList();
   }
 
+  Future<List<CaptureItem>> search(String query) async {
+    final db = await database;
+    final like = '%$query%';
+    final rows = await db.query(
+      'captures',
+      where: 'content LIKE ? OR source_hint LIKE ?',
+      whereArgs: [like, like],
+      orderBy: 'captured_at DESC',
+    );
+    AnalyticsService.instance.debug(_tag, '搜索', properties: {'query': query, 'count': rows.length});
+    return rows.map(CaptureItem.fromMap).toList();
+  }
+
+  Future<CaptureItem?> getById(int id) async {
+    final db = await database;
+    final rows = await db.query(
+      'captures',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return CaptureItem.fromMap(rows.first);
+  }
+
+  /// 把一段文字作为「追加块」存到某条想法下方（独立小卡片，不拼进正文）。
+  Future<void> appendBlock(int captureId, String content) async {
+    final db = await database;
+    await db.insert('capture_appends', {
+      'capture_id': captureId,
+      'content': content,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    });
+    AnalyticsService.instance.trackEvent('db_append', properties: {'id': captureId});
+  }
+
+  /// 某条想法的全部追加块（旧→新）。
+  Future<List<CaptureAppend>> getAppends(int captureId) async {
+    final db = await database;
+    final rows = await db.query(
+      'capture_appends',
+      where: 'capture_id = ?',
+      whereArgs: [captureId],
+      orderBy: 'created_at ASC',
+    );
+    return rows.map(CaptureAppend.fromMap).toList();
+  }
+
+  /// 编辑想法正文（覆盖内容）。
+  Future<void> updateContent(int id, String content) async {
+    final db = await database;
+    await db.update('captures', {'content': content}, where: 'id = ?', whereArgs: [id]);
+    AnalyticsService.instance.trackEvent('db_edit', properties: {'id': id});
+  }
+
   Future<void> delete(int id) async {
     final db = await database;
+    await db.delete('capture_appends', where: 'capture_id = ?', whereArgs: [id]);
     await db.delete('captures', where: 'id = ?', whereArgs: [id]);
     AnalyticsService.instance.trackEvent('db_delete', properties: {'id': id});
   }

@@ -8,8 +8,8 @@ class OverlayManager {
 
   static const _tag = 'OverlayManager';
 
-  /// Orb idle window size (12dp orb + touch padding for easy drag)
-  static const idleWindowSize = 54;
+  /// Orb idle window size (10dp orb + touch padding for easy drag)
+  static const idleWindowSize = 44;
 
   /// Radial menu window size (76dp radius × 2 + 30dp icons + 30dp margin)
   static const menuWindowSize = 240;
@@ -54,6 +54,7 @@ class OverlayManager {
     await FlutterOverlayWindow.showOverlay(
       enableDrag: true,
       overlayTitle: 'Float',
+      overlayContent: '捕球运行中 · 点悬浮球捕获想法',
       alignment: OverlayAlignment.centerRight,
       height: idleWindowSize,
       width: idleWindowSize,
